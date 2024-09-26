@@ -1,58 +1,136 @@
+import 'package:http/http.dart' as http;
 import 'package:fusion/api.dart';
 import 'package:fusion/constants.dart';
 import 'package:fusion/services/service_locator.dart';
 import 'package:fusion/services/storage_service.dart';
-import 'package:http/http.dart' as http;
 
 class DashboardService {
-  getDashboard() async {
+   getDashboard() async {
     try {
-      var service = locator<StorageService>();
-      if (service.userInDB!.token == null) throw Exception('Can\'t load');
-      Map<String, String> headers = {
-        'Authorization': 'Token ' + (service.userInDB?.token ?? "")
-      };
-      var client = http.Client();
-      http.Response response = await client.get(
+      final storageService = locator<StorageService>();
+      final token = storageService.userInDB?.token;
+      if (token == null) {
+        throw Exception('Token Error');
+      }
+
+      final headers = {'Authorization': 'Token $token'};
+      final response = await http.get(
         Uri.http(
           getLink(),
-          kDashboard, // constant dashboard path
+          kDashboard,
         ),
         headers: headers,
       );
+
       if (response.statusCode == 200) {
-        print("success");
+        print("Dashboard loaded successfully");
         return response;
+      } else {
+        throw Exception('Failed to load dashboard');
       }
-      throw Exception('Can\'t load');
     } catch (e) {
-      print(e);
+      rethrow;
     }
   }
 
-  markRead(String id) async {
+  Future<http.Response?> getNotification() async {
     try {
-      StorageService? prefs = await StorageService.getInstance();
-      if (prefs!.userInDB?.token == null) throw Exception('Can\'t load');
-      String token = prefs.userInDB?.token ?? "";
-      Map<String, String> headers = {'Authorization': 'Token ' + token};
-      Map<String, String> body = {"id": id};
-      var client = http.Client();
-      http.Response response = await client.post(
+
+      final storageService = locator<StorageService>();
+      final token = storageService.userInDB?.token;
+      if (token == null) {
+
+        throw Exception('Token Error');
+      }
+
+
+      final headers = {'Authorization': 'Token $token'};
+      final response = await http.get(
+
         Uri.http(
           getLink(),
-          kNotificationRead, //constant notification read path
+          kNotification,
         ),
         headers: headers,
-        body: body,
       );
+
       if (response.statusCode == 200) {
+        print("Notifications loaded successfully");
         print("success");
+        print(response);
         return response;
       }
       throw Exception('Can\'t load');
     } catch (e) {
-      print(e);
+      rethrow;
+    }
+  }
+
+
+
+
+
+  Future<http.Response?> markNotificationAsRead(String id) async {
+    try {
+      final storageService = locator<StorageService>();
+      final token = storageService.userInDB?.token;
+      if (token == null) {
+        throw Exception('Token Error');
+      }
+
+      final headers = {'Authorization': 'Token $token'};
+      final uri = Uri.http(
+        getLink(),
+        kNotificationRead,
+        {'id': id}, // Pass id as a query parameter
+      );
+      final response = await http.put( // Change HTTP method to PUT
+        uri,
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        print("Notification marked as read successfully");
+        return response;
+      } else {
+        throw Exception('Failed to mark notification as read');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
+
+
+  Future<http.Response?> deleteNotification(String id) async {
+    try {
+      final storageService = locator<StorageService>();
+      final token = storageService.userInDB?.token;
+      if (token == null) {
+        throw Exception('Token Error');
+      }
+
+
+      final headers = {'Authorization': 'Token $token'};
+      final response = await http.delete(
+
+        Uri.http(
+          getLink(),
+          kNotificationDelete,
+          {'id': id}, // Add query parameter for notification id
+        ),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        print("Notification deleted successfully");
+        return response;
+      } else {
+        throw Exception('Failed to delete notification');
+      }
+    } catch (e) {
+      rethrow;
     }
   }
 }

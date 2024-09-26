@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fusion/models/complaints.dart';
 import 'package:fusion/services/complaint_service.dart';
 import 'package:intl/intl.dart';
 
@@ -28,14 +27,14 @@ class UpdateComplaint extends StatefulWidget {
 class _UpdateComplaintState extends State<UpdateComplaint> {
   @override
   Widget build(BuildContext context) {
-    DateTime? complaint_finish = DateTime.now();
+    DateTime? complaintFinish = DateTime.now();
     DateFormat formatter = DateFormat('yyyy-MM-dd');
-    String? finishedDate = formatter.format(complaint_finish);
-    String complaint_date = DateTime.now().toString();
+    String? finishedDate = formatter.format(complaintFinish);
+    String complaintDate = DateTime.now().toString();
     print(finishedDate);
-    String? complaint_type = widget.complaintType;
+    String? complaintType = widget.complaintType;
     String? location = widget.location;
-    String? specific_location;
+    String? specificLocation;
     String? details;
     String? status = "0";
 
@@ -126,12 +125,13 @@ class _UpdateComplaintState extends State<UpdateComplaint> {
               ),
               decoration: kTextFieldInputDecoration,
               onChanged: (input) {
-                specific_location = input;
+                specificLocation = input;
               },
               validator: (String? value) {
                 if (value!.isEmpty) {
                   return 'Please enter specific_location';
                 }
+                return null;
               },
             ),
             SizedBox(
@@ -160,6 +160,7 @@ class _UpdateComplaintState extends State<UpdateComplaint> {
                 if (value!.isEmpty) {
                   return 'Please enter details';
                 }
+                return null;
               },
             ),
             SizedBox(
@@ -171,11 +172,11 @@ class _UpdateComplaintState extends State<UpdateComplaint> {
                   ComplaintService auth = ComplaintService();
                   bool lodge = await auth.updateComplaint(
                     widget.id!,
-                    complaint_date,
+                    complaintDate,
                     finishedDate,
-                    complaint_type!,
+                    complaintType!,
                     location!,
-                    specific_location!,
+                    specificLocation!,
                     details!,
                     status,
                     widget.remarks!,

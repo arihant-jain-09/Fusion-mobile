@@ -1,35 +1,26 @@
-// import 'dart:convert';
-
-import 'package:fusion/api.dart';
 import 'package:fusion/constants.dart';
-// import 'package:fusion/models/gymkhana.dart';
 import 'package:fusion/services/service_locator.dart';
 import 'package:fusion/services/storage_service.dart';
 import 'package:http/http.dart' as http;
 
 class GymkhanaService {
-  // getGymkhanaClubsData() async {
-  //   return getGymkhanaData(urls[0]);
-  // }
-  // getGymkhanaMembersData() async {
-  //   return getGymkhanaData(urls[1]);
-  // }
-
-  getGymkhanaData({int urlIdx = 0}) async {
+  Future<http.Response> getGymkhanaData({String url = ""}) async {
     try {
-      var service = locator<StorageService>();
-      if (service.userInDB?.token == null)
-        throw Exception('Can\'t load Gymkhanadata');
+      if (url == "") throw Exception('Invalid Gymkhana Url passed');
+
+      var storage_service = locator<StorageService>();
+      if (storage_service.userInDB?.token == null)
+        throw Exception('Token Error');
+
       Map<String, String> headers = {
-        'Authorization': 'Token ' + (service.userInDB?.token ?? "")
+        'Authorization': 'Token ' + (storage_service.userInDB?.token ?? "")
       };
       print("fetching Gymkhana");
       var client = http.Client();
       http.Response response = await client.get(
         Uri.http(
           getLink(),
-          kGymkhanaUrls[
-              urlIdx], //kGymkhanaUrls is a list of gymkhana end points
+          url,
         ),
         headers: headers,
       );
@@ -41,7 +32,7 @@ class GymkhanaService {
       }
       throw Exception('Can\'t load Gymkhanadata');
     } catch (e) {
-      print(e);
+      rethrow;
     }
   }
 }

@@ -15,8 +15,11 @@ class _PlaccementDuesState extends State<PlaccementDues> {
     //     ModalRoute.of(context)!.settings.arguments as AcademicData;
     return Scaffold(
       body: Container(
+        alignment: Alignment.center,
         padding: EdgeInsets.all(16),
-        child: Text('Nothing Placement'),
+        child: Text(
+          'work in progress',
+        ),
       ),
     );
   }

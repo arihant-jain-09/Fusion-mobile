@@ -1,14 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:fusion/constants.dart';
 
 class DefaultAppBar {
-  AppBar buildAppBar() {
+  AppBar buildAppBar({String titleText = "Dashboard"}) {
     return AppBar(
-      backgroundColor: Colors.black,
+      iconTheme: IconThemeData(color: Colors.white),
+      backgroundColor: kPrimaryColor,
       title: Text(
-        "FUSION",
-        style: TextStyle(color: Colors.white),
+        titleText,
+        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
       ),
       actions: <Widget>[
         Padding(

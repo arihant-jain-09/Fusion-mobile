@@ -15,9 +15,10 @@ class _LibraryDuesState extends State<LibraryDues> {
     //     ModalRoute.of(context)!.settings.arguments as AcademicData;
     return Scaffold(
       body: Container(
+        alignment: Alignment.center,
         padding: EdgeInsets.all(16),
         child: Text(
-          'Nothing Library',
+          'work in progress',
         ),
       ),
     );

@@ -15,8 +15,11 @@ class _HostelDuesState extends State<HostelDues> {
     //     ModalRoute.of(context)!.settings.arguments as AcademicData;
     return Scaffold(
       body: Container(
+        alignment: Alignment.center,
         padding: EdgeInsets.all(16),
-        child: Text('Nothing hostel'),
+        child: Text(
+          'work in progress',
+        ),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fusion/Components/pdf_view.dart';
-import 'package:fusion/Components/tabBar_text_button.dart';
+import 'package:fusion/Components/tabBar_children_with_text_button.dart';
 import 'package:fusion/api.dart';
 import 'package:fusion/constants.dart';
 import 'package:fusion/services/service_locator.dart';
@@ -37,7 +37,7 @@ class _ExamTimeTableState extends State<ExamTimeTable> {
       child: Scaffold(
         body: TabBarView(
           children: [
-            TabBarTextButton(
+            TabBarChildrenWithTextButton(
               label: 'END SEM TIME TABLE',
               onPressed: () async {
                 Navigator.push(

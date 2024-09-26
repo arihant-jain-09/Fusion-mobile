@@ -7,27 +7,47 @@ import 'package:http/http.dart' as http;
 
 class LoginService {
   Future<bool> login(String username, String password) async {
-    Map<String, String> data = {"username": username, "password": password};
-    Map<String, String> headers = {
-      'Content-Type': 'application/json; charset=UTF-8'
-    };
+    try {
+      Map<String, String> data = {"username": username, "password": password};
+      Map<String, String> headers = {
+        'Content-Type': 'application/json; charset=UTF-8'
+      };
 
-    var client = http.Client();
-    var response = await client.post(
-        Uri.http(
-          kAuthUrl, // constant api url
-          kAuthLogin, //constant api auth point
-        ),
-        headers: headers,
-        body: jsonEncode(data));
-    var prefs = await StorageService.getInstance();
+      print(data);
 
-    prefs!.saveUserInDB(User((jsonDecode(response.body))["token"]));
-    return true;
+      var client = http.Client();
+      var response = await client.post(
+          Uri.http(
+            kAuthUrl, // constant api url
+            kAuthLogin, //constant api auth point
+          ),
+          headers: headers,
+          body: jsonEncode(data));
+      var prefs = await StorageService.getInstance();
+      print("response.body: ${response.body}");
+
+      var storageService = await StorageService.getInstance();
+      storageService!.saveUserInDB(User((jsonDecode(response.body))["token"]));
+      storageService.saveToDisk<List<String>>(
+        'designations',
+        (jsonDecode(response.body)["designations"] as List<dynamic>)
+            .map((dynamic item) => item.toString())
+            .toList(),
+      );
+      storageService.saveStringToDisk(
+          "Current_designation", jsonDecode(response.body)["designations"][0]);
+      return true;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   void logout() async {
-    var prefs = await StorageService.getInstance();
-    prefs!.deleteKey("user");
+    try {
+      var storageService = await StorageService.getInstance();
+      storageService!.deleteKey("user");
+    } catch (e) {
+      rethrow;
+    }
   }
 }

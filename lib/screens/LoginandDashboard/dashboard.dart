@@ -2,15 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:fusion/models/profile.dart';
 import 'package:fusion/services/profile_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:fusion/Components/appBar.dart';
-import 'package:fusion/Components/side_drawer.dart';
+import 'package:fusion/Components/appBar2.dart';
+import 'package:fusion/Components/side_drawer2.dart';
 import 'package:fusion/models/dashboard.dart';
 import 'package:fusion/screens/LoginandDashboard/DashboardComponents/cardItems.dart';
 import 'package:fusion/services/dashboard_service.dart';
 import 'package:http/http.dart';
+import 'package:fusion/services/appBar_services.dart';
+import 'package:fusion/services/service_locator.dart';
+import 'package:fusion/services/storage_service.dart';
+import 'package:fusion/Components/bottom_navigation_bar.dart';
 
 class Dashboard extends StatefulWidget {
   static String tag = 'home-page';
@@ -20,9 +22,11 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  bool _notificationsBool = true;
+  bool _notificationsBool = false;
   bool _newsBool = false;
   bool _announcementsBool = false;
+  bool _homeBool = true;
+
   bool _loading = true;
   late String name;
   late String studentType;
@@ -33,6 +37,14 @@ class _DashboardState extends State<Dashboard> {
   late StreamController _profileController;
   late ProfileService profileService;
   late ProfileData data2;
+  late List<String> designationsArray;
+  var service = locator<StorageService>();
+
+  late var curr_desig = service.getFromDisk("Current_designation");
+
+  bool isStudent = false;
+
+  final appBarServices _appBarServices = appBarServices();
   @override
   void initState() {
     super.initState();
@@ -45,27 +57,48 @@ class _DashboardState extends State<Dashboard> {
 
   getData() async {
     try {
+      print("gfsgsgd");
       Response response = await dashboardService.getDashboard();
+      print("1");
       Response response2 = await profileService.getProfile();
+      print("2");
+      print(response);
+      print(response2);
+
       setState(() {
         data = DashboardData.fromJson(jsonDecode(response.body));
         data2 = ProfileData.fromJson(jsonDecode(response2.body));
         _loading = false;
       });
+      print(data2.user!);
+      print(
+          '-----------------------------------=---------------------------------------');
       name = data2.user!['first_name'] + ' ' + data2.user!['last_name'];
-      studentType = data2.profile!['department']!['name'] +
-          '  ' +
-          data2.profile!['user_type'];
+      studentType = data2.profile!['department']!['name'];
+
+      if (data2.profile!['user_type'] == 'student') {
+        isStudent = true;
+      }
     } catch (e) {
       print(e);
     }
   }
+
 
   loadData() async {
     getData().then((res) {
       _dashboardController.add(res);
       _profileController.add(res);
     });
+  }
+
+  fetchDesignations() async {
+    try {
+      designationsArray = await _appBarServices.getDesignations();
+    } catch (e) {
+      print("Error fetching designations: $e");
+      return null;
+    }
   }
 
   final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -80,12 +113,24 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DefaultAppBar()
-          .buildAppBar(), // This is default app bar used in all modules
-      drawer: SideDrawer(), // This is sideDrawer used in all modules
-      body: _loading == true
-          ? Center(child: CircularProgressIndicator())
-          : StreamBuilder(
+      appBar: CustomAppBar(
+        curr_desig: curr_desig,
+        headerTitle: "Dashboard",
+        onDesignationChanged: (newValue) {
+          setState(() {
+            curr_desig = newValue;
+          });
+        },
+      ), // This is default app bar used in all modules
+      drawer: SideDrawer(curr_desig: curr_desig),
+      bottomNavigationBar:
+      MyBottomNavigationBar(), // This is sideDrawer used in all modules
+      body: Column(
+        children: [
+          Expanded(
+            child: _loading == true
+                ? Center(child: CircularProgressIndicator())
+                : StreamBuilder(
               stream: _dashboardController.stream,
               builder: (context, AsyncSnapshot snapshot) {
                 return ListView(
@@ -95,17 +140,20 @@ class _DashboardState extends State<Dashboard> {
                     Card(
                       elevation: 2.0,
                       margin: EdgeInsets.symmetric(
-                          horizontal: 50.0, vertical: 20.0),
-                      shadowColor: Colors.black,
+                          horizontal: 20.0, vertical: 30.0),
+                      // shadowColor: Colors.black,
+                      color: Colors.white,
+
                       child: Column(
                         children: [
                           Container(
                             margin: EdgeInsets.only(top: 20.0),
                             width: 170.0,
-                            height: 170.0,
+                            height: 190.0,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/profile_pic.png'),
+                                image:
+                                AssetImage('assets/profile_pic.png'),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -115,16 +163,22 @@ class _DashboardState extends State<Dashboard> {
                           ),
                           Text(
                             name, //Display name of User
-                            style:
-                                TextStyle(fontSize: 20.0, color: Colors.black),
+                            style: TextStyle(
+                                fontSize: 20.0,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
                           ),
                           SizedBox(
                             height: 10.0,
                           ),
                           Text(
-                            studentType, // Display Type of User
-                            style:
-                                TextStyle(fontSize: 15.0, color: Colors.black),
+                            studentType +
+                                " " +
+                                curr_desig, // Display Type of User
+                            style: TextStyle(
+                                fontSize: 17.0,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
                           ),
                           SizedBox(
                             height: 10.0,
@@ -132,122 +186,21 @@ class _DashboardState extends State<Dashboard> {
                         ],
                       ),
                     ),
-                    Card(
-                      color: Colors.black,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                _notificationsBool = true;
-                                _announcementsBool = false;
-                                _newsBool = false;
-                                setState(() {
-                                  _notificationsBool = true;
-                                  _announcementsBool = false;
-                                  _newsBool = false;
-                                });
-                              },
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Notifications',
-                                    style: TextStyle(
-                                      fontSize: 16.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.notifications_active_rounded,
-                                    color: _notificationsBool
-                                        ? Colors.deepOrangeAccent
-                                        : Colors.white,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                _newsBool = true;
-                                _announcementsBool = false;
-                                _notificationsBool = false;
-                                setState(() {
-                                  _newsBool = true;
-                                  _announcementsBool = false;
-                                  _notificationsBool = false;
-                                });
-                              },
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'News',
-                                    style: TextStyle(
-                                      fontSize: 16.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.email,
-                                    color: _newsBool
-                                        ? Colors.deepOrangeAccent
-                                        : Colors.white,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                _announcementsBool = true;
-                                _newsBool = false;
-                                _notificationsBool = false;
-                                setState(() {
-                                  _announcementsBool = true;
-                                  _newsBool = false;
-                                  _notificationsBool = false;
-                                });
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 16.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Announcements',
-                                      style: TextStyle(
-                                        fontSize: 16.0,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.announcement,
-                                      color: _announcementsBool
-                                          ? Colors.deepOrangeAccent
-                                          : Colors.white,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    _notificationsBool
-                        ? NotificationCard(
-                            notifications: data.notifications,
-                          )
-                        : NewsCard(),
+
+
+                    // _notificationsBool
+                    //     ? NotificationCard(
+                    //         notifications: data.notifications,
+                    //       )
+                    //     : NewsCard(),
                   ],
                 );
               },
             ),
+          ),
+          // Place the BottomNavigationBar here
+        ],
+      ),
     );
   }
 
